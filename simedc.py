@@ -18,7 +18,7 @@ class Simulate:
     def __init__(self, mission_time,
                  num_racks, nodes_per_rack, disks_per_node, capacity_per_disk,
                  chunk_size, num_stripes,
-                 code_type, code_n, code_k, code_l,
+                 code_type, code_n, code_k, code_l, code_free, 
                  place_type, chunk_rack_config,
                  rack_fail_dists, rack_repair_dist, node_fail_dists,
                  node_transient_fail_dists, node_transient_repair_dists,
@@ -26,7 +26,7 @@ class Simulate:
                  use_network, network_setting,
                  use_power_outage, power_outage_dist, power_outage_duration,
                  use_trace=False, trace_id=0,
-                 sim_type=Simulation.REGULAR, is_parms=None):
+                 sim_type=Simulation.REGULAR, is_parms=None): #add code_free
 
         # 타입에 맞는 시뮬레이션을 생성하고 init , 디폴트는 Simulation.UNIFBFB
         if sim_type == Simulation.REGULAR:
@@ -100,6 +100,7 @@ def usage(arg): # 오작동시 가이드 출력
     print "-O <use_power_outage> [--use_power_outage <use_power_outage>]"
     print "-F <use_trace> [--use_trace <use_trace>]"
     print "-d <trace_id> [--trace_id <trace_id>]"
+    print "-E <code_free> [--code_free <code_free>]"
     print ""
     print "Detail:"
     print "sim_type =  \"regular\" (Regular), \"unifbfb\" (Enable importance sampling)"
@@ -119,6 +120,7 @@ def usage(arg): # 오작동시 가이드 출력
     print "chunk_rack_config = number of chunks in each rack. This must agree with the erasure code."
     print "use_network = False / True. If using network, network_setting = [cross_rack_repair_bwth, intra_rack_repair_bwth]"
     print "use_trace = False / True. If using trace, trace_id is in (4~11, 13~18)."
+    print "code_free = number of free chunks" #add
     print ""
     print "Samples:"
     print arg, "-n 9 -k 6 -t rs -T flat"
@@ -140,6 +142,7 @@ def get_parms(): # 입력 매개변수 추출
     code_n = 9  # number of chunks in total per stripe
     code_k = 6  # number of data chunks
     code_l = 2  # number of groups in LRC
+    code_free = 0 #add number of free chunk
     place_type = Placement.PLACE_TYPE_FLAT # PLACE_TYPE_HIERARCHICAL
     chunk_rack_config = None
 
@@ -157,19 +160,20 @@ def get_parms(): # 입력 매개변수 추출
     is_fb_prob = float(0.5)
     is_beta = float(.61)
 
+
     try:
         # getopt, C-style parser for command line options
-        (opts, args) = getopt.getopt(sys.argv[1:], "hi:p:m:u:R:N:D:C:K:S:t:n:k:l:T:g:W:s:O:F:d:A:f:b:",
+        (opts, args) = getopt.getopt(sys.argv[1:], "hi:p:m:u:R:N:D:C:K:S:t:n:k:l:E:T:g:W:s:O:F:d:A:f:b:",
                                      ["help",
                                       "total_iterations", "num_processes", "mission_time", "rseed_plus",
                                       "num_racks", "nodes_per_rack", "disks_per_node", "capacity_per_disk",
                                       "chunk_size", "num_stripes",
-                                      "code_type", "code_n", "code_k", "code_l",
+                                      "code_type", "code_n", "code_k", "code_l", "code_free", 
                                       "place_type", "chunk_rack_config",
                                       "use_network", "network_setting",
                                       "use_power_outage",
                                       "use_trace", "trace_id",
-                                      "sim_type","fb_prob", "beta"])
+                                      "sim_type","fb_prob", "beta"]) #add code_free
         # opts = [('-n', '9'), ('-k', '6'), ('-t', 'rs'), ('-T', 'flat')] / args = []
     except:
         usage(sys.argv[0])
@@ -221,6 +225,8 @@ def get_parms(): # 입력 매개변수 추출
             code_k = int(a)
         elif o in ("-l", "-code_l"):
             code_l = int(a)
+        elif o in ("-E", "-code_free"):
+            code_free = int(a)
         elif o in ("-T", "--place_type"):
             if a == "flat":
                 place_type = Placement.PLACE_TYPE_FLAT
@@ -265,7 +271,7 @@ def get_parms(): # 입력 매개변수 추출
     return (total_iterations, num_processes, mission_time, rseed_plus,
             num_racks, nodes_per_rack, disks_per_node, capacity_per_disk,
             chunk_size, num_stripes,
-            code_type, code_n, code_k, code_l,
+            code_type, code_n, code_k, code_l, code_free, 
             place_type, chunk_rack_config,
             use_network, network_setting,
             use_power_outage,
@@ -277,12 +283,12 @@ def do_it(job_description):
     (iter_num, rseed, mission_time,
      num_racks, nodes_per_rack, disks_per_node, capacity_per_disk,
      chunk_size, num_stripes,
-     code_type, code_n, code_k, code_l,
+     code_type, code_n, code_k, code_l, code_free, 
      place_type, chunk_rack_config,
      use_network, network_setting,
      use_power_outage,
      use_trace, trace_id,
-     sim_type, is_fb_prob, is_beta) = job_description
+     sim_type, is_fb_prob, is_beta) = job_description #add code_free
 
     # 시드값을 맞춘다 = 동일한 셋트의 난수 발생
     nprandom.seed(rseed)
@@ -325,7 +331,7 @@ def do_it(job_description):
     simulation = Simulate(mission_time,
                           num_racks, nodes_per_rack, disks_per_node, capacity_per_disk,
                           chunk_size, num_stripes,
-                          code_type, code_n, code_k, code_l,
+                          code_type, code_n, code_k, code_l, code_free, 
                           place_type, chunk_rack_config,
                           rack_fail_dists, rack_repair_dists,
                           node_fail_dists, node_transient_fail_dists, node_transient_repair_dists,
@@ -380,7 +386,7 @@ if __name__ == "__main__":
     (total_iterations, num_processes, mission_time, rseed_plus,
      num_racks, nodes_per_rack, disks_per_node, capacity_per_disk,
      chunk_size, num_stripes,
-     code_type, code_n, code_k, code_l,
+     code_type, code_n, code_k, code_l, code_free,
      place_type, chunk_rack_config,
      use_network, network_setting,
      use_power_outage,
@@ -424,6 +430,7 @@ if __name__ == "__main__":
     print "Simulation type(시뮬레이션 유형) = %s" % sim_type
     if sim_type == Simulation.UNIFBFB:
         print "is_fb_prob(실패 편향 확률) = %.3f, is_beta(평균 repair rate에 가까운 값) = %.3f" % (is_fb_prob, is_beta)
+    print "number of free chunks(Free chunk) = %d" % code_free #add
     print "***************************************\n"
 
     # Check whether the parsed traces exist, 트레이스가 존재할 경우 체크
