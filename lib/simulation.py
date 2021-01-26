@@ -24,7 +24,7 @@ class Simulation:
     def __init__(self, mission_time,
                  num_racks, nodes_per_rack, disks_per_node, capacity_per_disk,
                  chunk_size, num_stripes,
-                 code_type, code_n, code_k,
+                 code_type, code_n, code_k, code_free, 
                  place_type, chunk_rack_config,
                  rack_fail_dists, rack_repair_dists, node_fail_dists,
                  node_transient_fail_dists, node_transient_repair_dists,
@@ -33,7 +33,7 @@ class Simulation:
                  use_power_outage, power_outage_dist, power_outage_duration,
                  code_l=0,
                  use_trace=False, trace_id=0,
-                 is_parms=None):
+                 is_parms=None): #add code_free
 
         # Mission time of the simulation
         self.mission_time = mission_time
@@ -52,6 +52,7 @@ class Simulation:
         self.n = code_n
         self.k = code_k
         self.l = code_l # for LRC
+        self.free = code_free #add code_free
         self.place_type = place_type
         self.chunk_rack_config = chunk_rack_config
         self.events_queue = None

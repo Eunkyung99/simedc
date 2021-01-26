@@ -19,8 +19,8 @@ class Placement:
     PLACE_TYPE_HIERARCHICAL = "HIERARCHICAL" #"More than one chunk of a stripe resides in a rack" 랙에 둘 이상의 스트라이프 청크가 있음
 
     def __init__(self, num_racks, nodes_per_rack, disks_per_node, capacity_per_disk,
-                 num_stripes, chunk_size, code_type, code_n, code_k, place_type,
-                 chunk_rack_config=None, code_l=0):
+                 num_stripes, chunk_size, code_type, code_n, code_k, code_free, place_type,
+                 chunk_rack_config=None, code_l=0): #add code_free
         self.num_racks = num_racks
         self.nodes_per_rack = nodes_per_rack
         self.disks_per_node = disks_per_node
@@ -32,6 +32,7 @@ class Placement:
         self.n = code_n # number of chunks in a stripe 전체 청크 수
         self.k = code_k # number of data chunks in a stripe 데이터 청크 수
         self.m = self.n - self.k # 패리티 청크 수
+        self.free= code_free #add code_free
         self.num_chunks = self.n * self.num_stripes
         self.num_data_chunks = self.k * self.num_stripes
         self.place_type = place_type
@@ -67,6 +68,7 @@ class Placement:
             self.logger.error('Fail to generate placement!')
 
         self.num_chunks_per_disk = self.generate_num_chunks_per_disk()
+        #print "free chunk: %d" %self.free 
 
 
     # Generate placement for different code_type
@@ -75,6 +77,9 @@ class Placement:
             if self.k < 1 or self.n <= self.k:
                 self.logger.error('Invalid value of code_n and code_k for erasure coding!')
                 return False
+            if self.free < 0 or self.n <= self.free:
+                self.logger.error('Invalid value of code_free!') #add error code
+                return False 
             if self.code_type == Placement.CODE_TYPE_LRC and self.l == 0:
                 self.logger.error('l should not be 0 for LRC!')
                 return False

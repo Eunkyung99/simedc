@@ -129,9 +129,9 @@ class RegularSimulation(Simulation):
         self.placement = Placement(self.num_racks, self.nodes_per_rack,
                                    self.disks_per_node, self.capacity_per_disk,
                                    self.num_stripes, self.chunk_size,
-                                   self.code_type, self.n, self.k,
+                                   self.code_type, self.n, self.k, self.free,
                                    self.place_type,
-                                   self.chunk_rack_config, self.l)
+                                   self.chunk_rack_config, self.l) #add self.code_free
 
         self.network = Network(self.num_racks, self.nodes_per_rack, self.network_setting)
 
