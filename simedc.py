@@ -283,12 +283,12 @@ def do_it(job_description):
     (iter_num, rseed, mission_time,
      num_racks, nodes_per_rack, disks_per_node, capacity_per_disk,
      chunk_size, num_stripes,
-     code_type, code_n, code_k, code_l, code_free, 
+     code_type, code_n, code_k, code_l,  
      place_type, chunk_rack_config,
      use_network, network_setting,
      use_power_outage,
      use_trace, trace_id,
-     sim_type, is_fb_prob, is_beta) = job_description #add code_free
+     sim_type, is_fb_prob, is_beta) = job_description
 
     # 시드값을 맞춘다 = 동일한 셋트의 난수 발생
     nprandom.seed(rseed)
