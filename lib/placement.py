@@ -30,9 +30,9 @@ class Placement:
         self.chunk_size = chunk_size
         self.code_type = code_type
         self.n = code_n # number of chunks in a stripe 전체 청크 수
-        self.k = code_k # number of data chunks in a stripe 데이터 청크 수
-        self.m = self.n - self.k # 패리티 청크 수
-        self.free= code_free #add code_free
+        self.free = code_free #add code_free
+        self.k = code_k - code_free # number of data chunks in a stripe 데이터 청크 수 (add free 청크 수 제외)
+        self.m = self.n - self.k # 패리티 청크 수 
         self.num_chunks = self.n * self.num_stripes
         self.num_data_chunks = self.k * self.num_stripes
         self.place_type = place_type
@@ -69,17 +69,18 @@ class Placement:
 
         self.num_chunks_per_disk = self.generate_num_chunks_per_disk()
         #print "free chunk: %d" %self.free 
+        #self.get_list()
 
 
     # Generate placement for different code_type
     def generate_placement(self):
         if self.code_type == Placement.CODE_TYPE_RS or self.code_type == Placement.CODE_TYPE_LRC:
-            if self.k < 1 or self.n <= self.k:
-                self.logger.error('Invalid value of code_n and code_k for erasure coding!')
-                return False
-            if self.free < 0 or self.n <= self.free:
+            if self.free < 0 or self.k <= 0 : #if free chunks are more than data chunks
                 self.logger.error('Invalid value of code_free!') #add error code
                 return False 
+            if self.k < 1 or self.n <= (self.k + self.free): #if k is more than n
+                self.logger.error('Invalid value of code_n and code_k for erasure coding!')
+                return False
             if self.code_type == Placement.CODE_TYPE_LRC and self.l == 0:
                 self.logger.error('l should not be 0 for LRC!')
                 return False
@@ -146,14 +147,17 @@ class Placement:
                     disk_list = []
                     for i in xrange(len(racks_list)):
                         disk_list += self.get_diff_disks(racks_list[i], self.chunk_rack_config[i])
-                    self.stripes_location.append(disk_list)
-
+                    self.stripes_location.append(disk_list) #0~349523
         else:
             return False
 
         return True
 
-
+    """ 
+    def get_list(self): #349523 stripe's location
+        for loc in self.stripes_location[349523]: #0~349523
+            print "%d" %loc
+    """
     # Randomly choose a disk from a rack with rack_id
     # 해당 랙id에서 무작위로 디스크 1개 선택
     def get_disk_randomly(self, rack_id):
@@ -207,20 +211,22 @@ class Placement:
     ##
     # Generate num_chunks_per_disk
     # Count the number of chunks on each disk
-    # 각 디스크의 데이터 청크 수 반환
+    # 각 디스크의 데이터 청크 수와 free 청크 수 반환
     def generate_num_data_chunks_per_disk(self):
-        num_data_chunks_per_disk = [0] * (self.num_racks * self.nodes_per_rack * self.disks_per_node)
+        num_data_chunks_per_disk = [0] * (self.num_racks * self.nodes_per_rack * self.disks_per_node) #number of disks
+        num_free_chunks_per_disk = [0] * (self.num_racks * self.nodes_per_rack * self.disks_per_node) #number of disks, add
         for stripe_location in self.stripes_location:
             chunk_id = 0
             for disk_id in stripe_location:
-                if chunk_id < self.k:
+                if chunk_id < self.k: #self.k=code_k-code_free
                     num_data_chunks_per_disk[disk_id] += 1
+                elif chunk_id <self.k+self.free: #add the free index: self.k~self.k+self.free-1 
+                    num_free_chunks_per_disk[disk_id] += 1
                 else:
                     break
                 chunk_id += 1
 
-        return num_data_chunks_per_disk
-
+        return num_data_chunks_per_disk, num_free_chunks_per_disk #add
 
     ##
     # Generate num_chunks_per_disk

@@ -34,7 +34,7 @@ class Simulate:
             self.sim = RegularSimulation(mission_time,
                                      num_racks, nodes_per_rack, disks_per_node, capacity_per_disk,
                                      chunk_size, num_stripes,
-                                     code_type, code_n, code_k,
+                                     code_type, code_n, code_k, code_free, 
                                      place_type, chunk_rack_config,
                                      rack_fail_dists, rack_repair_dist, node_fail_dists,
                                      node_transient_fail_dists, node_transient_repair_dists,
@@ -42,7 +42,7 @@ class Simulate:
                                      use_network, network_setting,
                                      use_power_outage, power_outage_dist, power_outage_duration,
                                      code_l,
-                                     use_trace, trace_id)
+                                     use_trace, trace_id) #add code_free
 
             # call RegularSimulation's init()
             self.sim.init()
@@ -51,7 +51,7 @@ class Simulate:
             self.sim = UnifBFBSimulation(mission_time,
                                          num_racks, nodes_per_rack, disks_per_node, capacity_per_disk,
                                          chunk_size, num_stripes,
-                                         code_type, code_n, code_k,
+                                         code_type, code_n, code_k, code_free,
                                          place_type, chunk_rack_config,
                                          rack_fail_dists, rack_repair_dist, node_fail_dists,
                                          node_transient_fail_dists, node_transient_repair_dists,
@@ -59,7 +59,7 @@ class Simulate:
                                          use_network, network_setting,
                                          use_power_outage, power_outage_dist, power_outage_duration,
                                          code_l,
-                                         use_trace, trace_id, is_parms)
+                                         use_trace, trace_id, is_parms) #add code_free
 
             # call UnifBFBSimulation's init()
             self.sim.init()
